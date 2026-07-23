@@ -134,7 +134,7 @@ To capture both conceptual meaning and exact term references, the engine (`src/d
 ### RRF Formula
 Candidate results from Dense Cosine Similarity (`BAAI/bge-small-en-v1.5`) and Sparse Lexical BM25 Search are merged using the RRF formula ($k=60$):
 
-$$\text{RRF\_Score}(d) = \sum_{m \in M} \frac{1}{k + r_m(d)}$$
+$$\text{RRF Score}(d) = \sum_{m \in M} \frac{1}{k + r_m(d)}$$
 
 ---
 
