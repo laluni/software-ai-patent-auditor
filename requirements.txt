@@ -1,0 +1,18 @@
+# LLM & Embeddings
+ollama>=0.1.0
+sentence-transformers>=2.2.2
+
+# Database & Vector Store
+psycopg2-binary>=2.9.9
+pgvector>=0.2.4
+
+# API & Data
+requests>=2.31.0
+pydantic>=2.0.0
+pandas>=2.0.0
+
+# UI
+streamlit>=1.30.0
+
+# Evaluation
+ragas>=0.1.0

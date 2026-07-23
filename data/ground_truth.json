@@ -1,0 +1,74 @@
+[
+  {
+    "category": "Software & Application Engineering",
+    "query": "Graph-based dependency injection framework with cycle detection and lazy instantiation",
+    "expected_patent_number": "US-10876543-B1",
+    "keywords": ["dependency-injection", "graph", "cycle-detection"]
+  },
+  {
+    "category": "Software & Application Engineering",
+    "query": "PII redaction and privacy filter pipeline replacing sensitive tokens before external API calls",
+    "expected_patent_number": "US-11544321-B2",
+    "keywords": ["pii", "redaction", "privacy"]
+  },
+  {
+    "category": "Software & Application Engineering",
+    "query": "Cross-lingual vector embedding retrieval system for document claim verification",
+    "expected_patent_number": "US-10956812-B1",
+    "keywords": ["vector", "retrieval", "embedding"]
+  },
+  {
+    "category": "Software & Application Engineering",
+    "query": "Real-time audio transcription and diarization pipeline utilizing speech-to-text transformer models",
+    "expected_patent_number": "US-12109843-B2",
+    "keywords": ["audio", "transcription", "diarization"]
+  },
+  {
+    "category": "Artificial Intelligence & Machine Learning",
+    "query": "Distributed neural network parameter optimization using synchronous gradient updates across GPU clusters",
+    "expected_patent_number": "US-11842210-B2",
+    "keywords": ["neural", "optimization", "gpu"]
+  },
+  {
+    "category": "Artificial Intelligence & Machine Learning",
+    "query": "Secure multi-party computation protocol for privacy-preserving federated machine learning",
+    "expected_patent_number": "US-12098432-B1",
+    "keywords": ["federated", "privacy-preserving", "multi-party"]
+  },
+  {
+    "category": "Artificial Intelligence & Machine Learning",
+    "query": "Automated image segmentation using convolutional attention neural networks for medical imaging",
+    "expected_patent_number": "US-10984321-B2",
+    "keywords": ["image", "convolutional", "segmentation"]
+  },
+  {
+    "category": "Artificial Intelligence & Machine Learning",
+    "query": "Anomaly detection in network traffic using unsupervised autoencoder neural networks",
+    "expected_patent_number": "US-11456789-B2",
+    "keywords": ["anomaly", "traffic", "autoencoder"]
+  },
+  {
+    "category": "Infrastructure, Databases & Distributed Systems",
+    "query": "Token bucket rate-limited database index synchronization framework",
+    "expected_patent_number": "US-11983452-B2",
+    "keywords": ["rate-limited", "token-bucket", "vector"]
+  },
+  {
+    "category": "Infrastructure, Databases & Distributed Systems",
+    "query": "Vector database indexing method using hierarchically navigable small world graphs (HNSW)",
+    "expected_patent_number": "US-11765432-B2",
+    "keywords": ["hnsw", "vector-database", "indexing"]
+  },
+  {
+    "category": "Infrastructure, Databases & Distributed Systems",
+    "query": "Asynchronous message queue broker with dynamic topic partitioning and low-latency failover",
+    "expected_patent_number": "US-10543210-B2",
+    "keywords": ["message-queue", "partitioning", "failover"]
+  },
+  {
+    "category": "Infrastructure, Databases & Distributed Systems",
+    "query": "Homomorphic encryption key rotation scheduler for secure cloud database storage",
+    "expected_patent_number": "US-11432109-B1",
+    "keywords": ["homomorphic", "encryption", "key-rotation"]
+  }
+]
