@@ -36,22 +36,6 @@ The following table summarizes the evaluation results across all **12 stress tes
 
 ---
 
-## 🧪 3. False Negative Probe Evaluation (Pass 1 Semantic Safety Net)
-
-The following table documents the **5 false-negative probe queries** that previously returned `LOW` risk in Pass 1 despite representing clear semantic infringement risk. After implementing the **Two-Layer Semantic Safety Net**, all 5 now return `MEDIUM` or `HIGH`.
-
-| Probe Query Pattern | Pre-Fix Pass 1 | Post-Fix Pass 1 | Mechanism | Status |
-| :--- | :---: | :---: | :--- | :---: |
-| Rate Limiting / Leaky Bucket | 🟢 **LOW** ❌ | 🔴 **HIGH** | LLM + SemanticFloor (sim ≥ 0.59) | ✅ **PASS** |
-| Message Queue / Durable Log | 🟢 **LOW** ❌ | 🟡 **MEDIUM** | SemanticFloor (sim=0.547, threshold=0.50) | ✅ **PASS** |
-| HNSW Nearest-Neighbor Graph | 🟢 **LOW** ❌ | 🔴 **HIGH** | LLM (direct patent hit sim=0.746) | ✅ **PASS** |
-| Ensemble Consensus / Voting | 🟢 **LOW** ❌ | 🟡 **MEDIUM** | SemanticFloor (sim ≥ 0.63) | ✅ **PASS** |
-| Distributed Anomaly Arbitration | 🟢 **LOW** ❌ | 🟡 **MEDIUM** | SemanticFloor (sim ≥ 0.63) | ✅ **PASS** |
-
-**Final Score: 5/5 probes correctly flagged as MEDIUM or HIGH** ✅
-
----
-
 ## 🛡️ 4. Key System Enhancements (Implemented)
 
 ### 1. Two-Layer Semantic Safety Net (`src/rag.py`)
