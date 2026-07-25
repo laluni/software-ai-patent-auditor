@@ -23,11 +23,9 @@ To ensure maximum relevance for AI engineering, cloud, and enterprise technology
 
 ---
 Note on 100% Hit Rate@3 & 1.0 MRR:
-"While 100% metrics can indicate data leakage in standard ML, in our retrieval benchmark it represents the mathematical synergy of Hybrid RRF. Neither Dense Vector nor Sparse BM25 achieved 100% on their own (both scored 75% Hit Rate / ~0.64 MRR). Dense vector search captured conceptual intent, while BM25 captured specific technical keyphrases. Reciprocal Rank Fusion (RRF with 
-k
-=
-60
-k=60) successfully fused these complementary signals, elevating the target ground-truth patent to rank #1 across all 12 benchmark queries."
+
+*While 100% metrics can indicate data leakage in standard ML, in our retrieval benchmark it represents the mathematical synergy of Hybrid RRF. Neither Dense Vector nor Sparse BM25 achieved 100% on their own (both scored 75% Hit Rate / ~0.64 MRR). Dense vector search captured conceptual intent, while BM25 captured specific technical keyphrases. Reciprocal Rank Fusion (RRF with k=60) successfully fused these complementary signals, elevating the target ground-truth patent to rank #1 across all 12 benchmark queries.*
+
 ---
 
 ## 3. Competitive Analysis: Enterprise Platforms vs. Our Solution
