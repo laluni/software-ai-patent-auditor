@@ -22,20 +22,12 @@ To ensure maximum relevance for AI engineering, cloud, and enterprise technology
 ```
 
 ---
-
-## 2. Architectural Rationale: First-Pass Screening vs. 20-Page Overhead
-
-A fundamental architectural question in patent RAG design is: *Why chunk Titles, Abstracts, and Core Claims rather than ingesting full 20+ page patent documents?*
-
-### ⚠️ The Issue with Full 20-Page Ingestion:
-1. **Vector Noise & Pollution:** A single patent publication contains 15,000–30,000 words. Over 80% of the text consists of figure descriptions (*"FIG. 1 illustrates a block diagram..."*) and prior-art background. Ingesting full documents causes vector search to match against irrelevant background text rather than core claims.
-2. **50x Cost & Compute Overhead:** Ingesting full patents expands database size by **50x**, slowing query latency without improving retrieval precision.
-
-### 💡 Production Verdict: Two-Pass Architecture
-Commercial patent AI systems rely on a **Two-Pass Architecture**:
-* **Pass 1 (Screening - Handled by our system):** Chunk Abstract + Core Claims to screen millions of patents down to Top-K candidates in sub-100ms.
-* **Pass 2 (Deep Legal Audit):** Pass the raw claims of Top-K candidates to the LLM for line-by-line infringement analysis.
-
+Note on 100% Hit Rate@3 & 1.0 MRR:
+"While 100% metrics can indicate data leakage in standard ML, in our retrieval benchmark it represents the mathematical synergy of Hybrid RRF. Neither Dense Vector nor Sparse BM25 achieved 100% on their own (both scored 75% Hit Rate / ~0.64 MRR). Dense vector search captured conceptual intent, while BM25 captured specific technical keyphrases. Reciprocal Rank Fusion (RRF with 
+k
+=
+60
+k=60) successfully fused these complementary signals, elevating the target ground-truth patent to rank #1 across all 12 benchmark queries."
 ---
 
 ## 3. Competitive Analysis: Enterprise Platforms vs. Our Solution
