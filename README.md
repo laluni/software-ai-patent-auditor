@@ -1,4 +1,4 @@
-# 📜 Software & AI Patent Infringement Auditor
+# Software & AI Patent Infringement Auditor
 
 > **Capstone Project for the [DataTalks.Club LLM Zoomcamp](https://github.com/DataTalksClub/llm-zoomcamp).**  
 > **An End-to-End Production RAG Application for Automated Software, AI, and Infrastructure Patent Infringement Auditing, Cross-Lingual Claim Translation, and Legal Risk Mitigation.**
@@ -12,7 +12,7 @@
 
 ---
 
-## 📌 Table of Contents
+## Table of Contents
 
 1. [Executive Summary & Problem Statement](#1-executive-summary--problem-statement)
 2. [Peer-Review Rubric Alignment](#2-peer-review-rubric-alignment)
