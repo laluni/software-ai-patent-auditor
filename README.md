@@ -10,39 +10,23 @@
 [![Docker](https://img.shields.io/badge/Docker-Multi--Container-2496ED)](https://www.docker.com/)
 
 ---
+
 ## Table of Contents
-1. [Overview & Problem Statement](#overview--problem-statement)
-2. [Project Alignment with Zoomcamp Requirements](#project-alignment-with-zoomcamp-requirements)
-3. [Architecture & Workflow](#architecture--workflow)
-4. [Data Ingestion Pipeline (`dlt`)](#data-ingestion-pipeline-dlt)
-5. [Hybrid Retrieval & RRF Formulation](#hybrid-retrieval--rrf-formulation)
-6. [Evaluation Benchmark & Limitations](#evaluation-benchmark--limitations)
-7. [LLM Screening, Heuristic Floor & Trade-Offs](#llm-screening-heuristic-floor--trade-offs)
-8. [Hardware Requirements & Latency Benchmarks](#hardware-requirements--latency-benchmarks)
-9. [Automated Testing](#automated-testing)
-10. [Setup & Reproducibility](#setup--reproducibility)
+1. [Overview & Problem Statement](#1-overview--problem-statement)
+2. [Architecture & Workflow](#2-architecture--workflow)
+3. [Data Ingestion Pipeline (`dlt`)](#3-data-ingestion-pipeline-dlt)
+4. [Hybrid Retrieval & RRF Formulation](#4-hybrid-retrieval--rrf-formulation)
+5. [Evaluation Benchmark & Limitations](#5-evaluation-benchmark--limitations)
+6. [LLM Screening, Heuristic Floor & Trade-Offs](#6-llm-screening-heuristic-floor--trade-offs)
+7. [Hardware Requirements & Latency Benchmarks](#7-hardware-requirements--latency-benchmarks)
+8. [Automated Testing](#8-automated-testing)
+9. [Project Alignment with Zoomcamp Requirements](#9-project-alignment-with-zoomcamp-requirements)
+10. [Setup & Reproducibility](#10-setup--reproducibility)
+11. [Important Notice](#11-important-notice)
 
 ---
 
-## Project Alignment with Zoomcamp Requirements
-
-For peer reviewers evaluating this capstone against the course checklist:
-
-| Evaluation Criterion | Implementation Details & File Location |
-| :--- | :--- |
-| **Problem Description** | Clear software prior-art search problem statement contrasting developer vs. legal vocabulary (`README.md`). |
-| **Knowledge Base & LLM** | PostgreSQL with `pgvector` knowledge base queried via local Ollama `qwen2.5` (`src/db.py`, `src/rag.py`). |
-| **Retrieval Evaluation** | Automated evaluation script comparing Dense Vector, Sparse BM25, and Hybrid RRF (`src/eval.py`, `data/ground_truth.json`). |
-| **RAG / LLM Evaluation** | Evaluated prompt strategies, Doctrine of Equivalents, and the heuristic safety floor across 5 domain probe tests. |
-| **User Interface** | Interactive Streamlit web application (`app.py`) with synchronized risk badges and Pass 2 claim inspection. |
-| **Ingestion Pipeline** | Automated data ingestion pipeline using **`dlt` (data load tool)** with primary key deduplication (`src/dlt_ingest.py`). |
-| **Containerization** | Multi-service Docker Compose orchestrating `postgres` (`pgvector`), `ollama`, and the `web` application (`docker-compose.yml`, `Dockerfile`). |
-| **Reproducibility** | Complete setup instructions for both Docker and local virtualenv, with pinned dependencies (`requirements.txt`). |
-| **Best Practices** | Hybrid search with RRF ($k=60$), document re-ranking, and LLM keyword query rewriting (`src/search.py`, `src/rag.py`). |
-
----
-
-## Overview & Problem Statement
+## 1. Overview & Problem Statement
 
 Engineering teams developing proprietary software frequently need to perform preliminary checks against existing patent claims to avoid obvious prior art. However, searching patent databases is challenging because patent attorneys draft claims in abstract, legal vocabulary ("legalese"):
 
@@ -59,7 +43,7 @@ This project explores a **Two-Pass RAG pipeline** to bridge this vocabulary gap:
 
 ---
 
-## Architecture & Workflow
+## 2. Architecture & Workflow
 
 ```mermaid
 flowchart TD
@@ -82,7 +66,7 @@ flowchart TD
 
 ---
 
-## Data Ingestion Pipeline (`dlt`)
+## 3. Data Ingestion Pipeline (`dlt`)
 
 Patent records are extracted from the **USPTO PatentsView API** using an automated [dlt (data load tool)](https://dlthub.com/) pipeline in `src/dlt_ingest.py`.
 
@@ -98,7 +82,7 @@ python -m src.dlt_ingest
 
 ---
 
-## Hybrid Retrieval & RRF Formulation
+## 4. Hybrid Retrieval & RRF Formulation
 
 To combine semantic relevance with exact technical term matching, the retrieval layer (`src/db.py`) executes **Reciprocal Rank Fusion (RRF)**:
 
@@ -108,7 +92,7 @@ Where $k=60$, $m$ is the ranking modality (Dense Cosine Similarity and Sparse Fu
 
 ---
 
-## Evaluation Benchmark & Limitations
+## 5. Evaluation Benchmark & Limitations
 
 ### Retrieval Evaluation
 We evaluated retrieval performance using an automated benchmark suite (`src/eval.py`) across a curated test set (`data/ground_truth.json`) spanning 3 domains (Software Architecture, AI/ML, and Distributed Systems):
@@ -130,7 +114,7 @@ python -m src.eval
 
 ---
 
-## LLM Screening, Heuristic Floor & Trade-Offs
+## 6. LLM Screening, Heuristic Floor & Trade-Offs
 
 ### The Challenge of Small Models on Legal Claims
 When evaluating complex patent claims with local 7B-class models (`qwen2.5`), small models occasionally miss functional equivalence if the patent attorney drafted the claim in non-standard phrasing, producing false negatives.
@@ -144,7 +128,7 @@ To prevent false negatives, we implemented a programmatic safety heuristic:
 
 ---
 
-## Hardware Requirements & Latency Benchmarks
+## 7. Hardware Requirements & Latency Benchmarks
 
 Tested on **Intel Core i7 / 16 GB RAM** (Local CPU inference via Ollama):
 
@@ -160,7 +144,7 @@ Tested on **Intel Core i7 / 16 GB RAM** (Local CPU inference via Ollama):
 
 ---
 
-## Automated Testing
+## 8. Automated Testing
 
 The codebase includes automated unit and integration tests covering vector store fallbacks, RRF arithmetic, and the programmatic safety floor:
 
@@ -175,7 +159,25 @@ Test coverage includes:
 
 ---
 
-## Setup & Reproducibility
+## 9. Project Alignment with Zoomcamp Requirements
+
+For peer reviewers evaluating this capstone against the course checklist:
+
+| Evaluation Criterion | Implementation Details & File Location |
+| :--- | :--- |
+| **Problem Description** | Clear software prior-art search problem statement contrasting developer vs. legal vocabulary (`README.md` Section 1). |
+| **Knowledge Base & LLM** | PostgreSQL with `pgvector` knowledge base queried via local Ollama `qwen2.5` (`src/db.py`, `src/rag.py`). |
+| **Retrieval Evaluation** | Automated evaluation script comparing Dense Vector, Sparse BM25, and Hybrid RRF (`src/eval.py`, `data/ground_truth.json`). |
+| **RAG / LLM Evaluation** | Evaluated prompt strategies, Doctrine of Equivalents, and the heuristic safety floor across 5 domain probe tests. |
+| **User Interface** | Interactive Streamlit web application (`app.py`) with synchronized risk badges and Pass 2 claim inspection. |
+| **Ingestion Pipeline** | Automated data ingestion pipeline using **`dlt` (data load tool)** with primary key deduplication (`src/dlt_ingest.py`). |
+| **Containerization** | Multi-service Docker Compose orchestrating `postgres` (`pgvector`), `ollama`, and the `web` application (`docker-compose.yml`, `Dockerfile`). |
+| **Reproducibility** | Complete setup instructions for both Docker and local virtualenv, with pinned dependencies (`requirements.txt`). |
+| **Best Practices** | Hybrid search with RRF ($k=60$), document re-ranking, and LLM keyword query rewriting (`src/search.py`, `src/rag.py`). |
+
+---
+
+## 10. Setup & Reproducibility
 
 ### Option A: Docker Compose (Recommended)
 
@@ -217,7 +219,8 @@ pip install -r requirements.txt
 # 4. Launch Streamlit UI
 streamlit run app.py
 ```
+
 ---
 
-### Important Notice
+## 11. Important Notice
 **This project is a developer tool to help engineers search and explore technical patent ideas. It is NOT legal advice. Always consult a real patent lawyer before making business or legal decisions.**
