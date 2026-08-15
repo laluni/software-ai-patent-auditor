@@ -1,23 +1,43 @@
 # Setup & Installation Guide
 
-Follow these steps to run the **AI Patent Prior-Art & Trade-Secret Auditor** locally.
+This guide covers setting up and running the **Software & AI Patent Infringement Auditor** locally or via Docker.
 
 ---
 
 ## 1. Prerequisites
 
 - **Python**: Version `3.10` or higher
-- **Ollama**: Installed and running ([Download Ollama](https://ollama.com/))
-- **Docker Desktop**: Installed and running (for PostgreSQL + PGVector)
+- **Ollama**: Local LLM server ([Download Ollama](https://ollama.com/))
+- **Docker Desktop**: For PostgreSQL with `pgvector` ([Download Docker](https://www.docker.com/products/docker-desktop/))
 
 ---
 
-## 2. Environment Setup
+## 2. Option A: Docker Compose (All-in-One Setup)
 
-### Step A: Clone Repository & Create Virtual Environment
+The repository provides a multi-container Docker composition that starts PostgreSQL (`pgvector`), Ollama, and the Streamlit web application simultaneously.
+
 ```bash
-git clone https://github.com/your-username/ai-patent-auditor.git
-cd ai-patent-auditor
+# 1. Clone the repository
+git clone https://github.com/laluni/software-ai-patent-auditor.git
+cd software-ai-patent-auditor
+
+# 2. Build and start all services
+docker compose up --build -d
+
+# 3. Pull the recommended LLM inside the Ollama container
+docker exec -it patent_ollama ollama pull qwen2.5:latest
+```
+
+Open your browser at **[http://localhost:8501](http://localhost:8501)**.
+
+---
+
+## 3. Option B: Local Python Environment Setup
+
+### Step 1: Clone Repository & Create Virtual Environment
+```bash
+git clone https://github.com/laluni/software-ai-patent-auditor.git
+cd software-ai-patent-auditor
 
 # Create virtual environment
 python -m venv venv
@@ -29,39 +49,42 @@ python -m venv venv
 source venv/bin/activate
 ```
 
-### Step B: Install Dependencies
+### Step 2: Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
----
-
-## 3. Launch Services
-
-### Step A: Start Vector Database (Docker Container)
-Ensure Docker Desktop is open, then start the PGVector PostgreSQL container:
+### Step 3: Start Vector Database
 ```bash
-docker compose up -d
+docker compose up -d postgres
 ```
 
-### Step B: Pull Ollama Model
-Pull the recommended Qwen 2.5 model:
+### Step 4: Pull Ollama Model
 ```bash
 ollama pull qwen2.5:latest
 ```
 
----
-
-## 4. Run Application & Evaluation
-
-### Run Web Dashboard (Streamlit)
+### Step 5: Launch Streamlit Web App
 ```bash
 streamlit run app.py
 ```
-Open your browser at `http://localhost:8501`.
+Open **[http://localhost:8501](http://localhost:8501)** in your browser.
 
-### Run Retrieval Evaluation Benchmark
-To test retrieval Hit Rate and MRR metrics:
+---
+
+## 4. Running Benchmarks & Tests
+
+### Run Ingestion Pipeline (`dlt`)
+```bash
+python -m src.dlt_ingest
+```
+
+### Run Retrieval Evaluation
 ```bash
 python -m src.eval
+```
+
+### Run Automated Unit & Integration Tests
+```bash
+python -m pytest tests/
 ```
