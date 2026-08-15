@@ -12,7 +12,7 @@
 ---
 
 ### Legal Disclaimer
-**This software is an engineering developer tool for technical prior-art discovery and exploratory risk screening. It is NOT legal advice and does NOT establish attorney-client privilege. Official patent clearance, freedom-to-operate (FTO) opinions, and infringement determinations must always be conducted by qualified patent counsel.**
+This software is an engineering developer tool for technical prior-art discovery and exploratory risk screening. It is NOT legal advice and does NOT establish attorney-client privilege. Official patent clearance, freedom-to-operate (FTO) opinions, and infringement determinations must always be conducted by qualified patent counsel.
 
 ---
 
