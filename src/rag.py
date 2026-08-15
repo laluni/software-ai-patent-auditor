@@ -82,28 +82,47 @@ def verify_query_guardrail(design_doc: str, retrieved_claims: list[dict]) -> dic
         "reason": ""
     }
 
+def get_ollama_host() -> str:
+    host = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434")
+    if not host.startswith("http://") and not host.startswith("https://"):
+        host = f"http://{host}"
+    return host
 
+def get_ollama_executable_path() -> Optional[str]:
+    try:
+        path = subprocess.check_output(["which", "ollama"], stderr=subprocess.DEVNULL).decode().strip()
+        return path
+    except:
+        return None
 
 def ensure_ollama_active() -> bool:
-    """
-    Checks if Ollama HTTP server is active; if not, triggers startup non-blockingly
-    and waits until port 11434 responds.
-    """
+    host = get_ollama_host()
+    # Check if Ollama is already running
     try:
-        requests.get("http://127.0.0.1:11434/api/tags", timeout=2)
-        return True
+        r = requests.get(f"{host}/api/tags", timeout=1)
+        if r.status_code == 200:
+            return True
     except Exception:
-        print("[Ollama Startup] Ollama server offline. Attempting to start daemon via Popen...")
+        pass
+
+    # If running against remote or docker host, don't attempt subprocess spawn
+    if "127.0.0.1" not in host and "localhost" not in host:
+        return False
+
+    # Attempt to start local Ollama daemon if on localhost
+    ollama_path = get_ollama_executable_path()
+    if ollama_path:
         try:
+            print(f"[Ollama Startup] Launching Ollama daemon from: {ollama_path}")
             subprocess.Popen(
-                ["ollama", "list"], 
+                [ollama_path, "serve"], 
                 stdout=subprocess.DEVNULL, 
                 stderr=subprocess.DEVNULL,
                 shell=True
             )
             for _ in range(10):
                 try:
-                    requests.get("http://127.0.0.1:11434/api/tags", timeout=1)
+                    requests.get(f"{host}/api/tags", timeout=1)
                     print("[Ollama Startup] Ollama server successfully started and listening!")
                     return True
                 except Exception:
@@ -114,7 +133,7 @@ def ensure_ollama_active() -> bool:
 
 def get_ollama_client() -> ollama.Client:
     ensure_ollama_active()
-    return ollama.Client(host="http://127.0.0.1:11434")
+    return ollama.Client(host=get_ollama_host())
 
 def extract_keywords_from_design_doc(design_doc: str, model_name: str = "qwen2.5:latest") -> list[str]:
     """

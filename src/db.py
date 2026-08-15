@@ -11,12 +11,12 @@ except ImportError:
     HAS_PG = False
 
 class PatentVectorStore:
-    def __init__(self, host="localhost", port=5432, dbname="patent_db", user="postgres", password="postgres_password"):
-        self.host = host
-        self.port = port
-        self.dbname = dbname
-        self.user = user
-        self.password = password
+    def __init__(self, host=None, port=None, dbname=None, user=None, password=None):
+        self.host = host or os.environ.get("POSTGRES_HOST", "localhost")
+        self.port = port or int(os.environ.get("POSTGRES_PORT", 5432))
+        self.dbname = dbname or os.environ.get("POSTGRES_DB", "patent_db")
+        self.user = user or os.environ.get("POSTGRES_USER", "postgres")
+        self.password = password or os.environ.get("POSTGRES_PASSWORD", "postgres_password")
         self.conn = None
         self.use_pg = False
 
