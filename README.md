@@ -18,8 +18,8 @@
 4. [Hybrid Retrieval & RRF Formulation](#4-hybrid-retrieval--rrf-formulation)
 5. [Evaluation Benchmark & Limitations](#5-evaluation-benchmark--limitations)
 6. [LLM Screening, Heuristic Floor & Trade-Offs](#6-llm-screening-heuristic-floor--trade-offs)
-7. [Hardware Requirements & Latency Benchmarks](#7-hardware-requirements--latency-benchmarks)
-8. [Automated Testing](#8-automated-testing)
+7. [Automated Testing](#7-automated-testing)
+8. [Hardware Requirements & Latency Benchmarks](#8-hardware-requirements--latency-benchmarks)
 9. [Project Alignment with Zoomcamp Requirements](#9-project-alignment-with-zoomcamp-requirements)
 10. [Setup & Reproducibility](#10-setup--reproducibility)
 11. [Important Notice](#11-important-notice)
@@ -128,7 +128,22 @@ To prevent false negatives, we implemented a programmatic safety heuristic:
 
 ---
 
-## 7. Hardware Requirements & Latency Benchmarks
+## 7. Automated Testing
+
+The codebase includes automated unit and integration tests covering vector store fallbacks, RRF arithmetic, and the programmatic safety floor:
+
+```bash
+# Run pytest suite
+python -m pytest tests/
+```
+
+Test coverage includes:
+- `tests/test_retrieval.py`: Tests RRF ranking math and vector store in-memory fallback.
+- `tests/test_safety_floor.py`: Tests semantic floor threshold upgrades and ensures unrelated domains remain unaffected.
+
+---
+
+## 8. Hardware Requirements & Latency Benchmarks
 
 Tested on **Intel Core i7 / 16 GB RAM** (Local CPU inference via Ollama):
 
@@ -141,21 +156,6 @@ Tested on **Intel Core i7 / 16 GB RAM** (Local CPU inference via Ollama):
 
 **Minimum System Requirements**: 8 GB RAM (CPU mode), 15 GB free disk space.  
 **Recommended**: 16 GB RAM or 6 GB+ VRAM GPU.
-
----
-
-## 8. Automated Testing
-
-The codebase includes automated unit and integration tests covering vector store fallbacks, RRF arithmetic, and the programmatic safety floor:
-
-```bash
-# Run pytest suite
-python -m pytest tests/
-```
-
-Test coverage includes:
-- `tests/test_retrieval.py`: Tests RRF ranking math and vector store in-memory fallback.
-- `tests/test_safety_floor.py`: Tests semantic floor threshold upgrades and ensures unrelated domains remain unaffected.
 
 ---
 
