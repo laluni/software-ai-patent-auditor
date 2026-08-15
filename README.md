@@ -60,7 +60,7 @@ This project satisfies the criteria from the **DataTalks.Club LLM Zoomcamp Capst
 | **Retrieval Evaluation** | 2 / 2 | Benchmarked 3 retrieval strategies (Dense Vector, Sparse BM25, Hybrid RRF) via `src/eval.py` on ground-truth dataset (`data/ground_truth.json`). |
 | **LLM Evaluation** | 2 / 2 | Evaluated prompt strategies (Single-Pass vs. 2-Pass, Standard vs. Doctrine of Equivalents + Cosine Safety Net Floor `sim >= 0.50`) on 5 false-negative probe scenarios. |
 | **Interface** | 2 / 2 | Interactive **Streamlit Web App** (`app.py`) with synchronized risk badges, claim expanders, sample spec loader, and Pass 2 deep audit. |
-| **Ingestion Pipeline** | 1 / 2 | Automated Python ingestion script (`src/ingest.py` & `src/api_client.py`) pulling live from USPTO REST API with local caching. |
+| **Ingestion Pipeline** | 2 / 2 | Automated **`dlt` (data load tool)** pipeline (`src/dlt_ingest.py`) with primary key deduplication, schema normalization, and pgvector loading. |
 | **Containerization** | 2 / 2 | Full multi-container `docker-compose.yml` orchestrating `postgres` (with `pgvector`), `ollama` service, and the `web` application via `Dockerfile`. |
 | **Reproducibility** | 2 / 2 | Step-by-step instructions for both 1-command Docker setup and local virtualenv setup, pinned `requirements.txt`, and accessible datasets. |
 | **Best Practices** | +3 / 3 | **Hybrid Search (+1)**: Vector + BM25 RRF ($k=60$).<br>**Document Re-ranking (+1)**: RRF reranking in `src/db.py` & Cosine Floor reranking.<br>**Query Rewriting (+1)**: LLM search term extraction (`extract_keywords_from_design_doc`). |
