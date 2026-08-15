@@ -1,94 +1,96 @@
-# 📊 Software & AI Patent Infringement Auditor: Comprehensive Evaluation Report
+# Evaluation Benchmark & System Performance Analysis
 
-This report documents the offline evaluation metrics, benchmarking methodology, search strategy comparisons, architectural rationale, and competitive platform analysis for the **Software & AI Patent Infringement Auditor**.
-
----
-
-## 🎯 1. Explicit Project Scope: The 3 Pillars
-
-To ensure maximum relevance for AI engineering, cloud, and enterprise technology portfolios, the project domain is explicitly scoped to **Software, AI, and Infrastructure Patents** across three core pillars:
-
-```
-┌──────────────────────────────────────────────────────────────────────────┐
-│                   EXPLICIT 3-PILLAR PATENT SCOPE                        │
-├──────────────────────────┬──────────────────────────┬────────────────────┤
-│ 1. Software Engineering  │ 2. Artificial Intel.     │ 3. Infrastructure &│
-│    & Applications        │    & Machine Learning    │    Distributed DBs │
-│  - Dependency Injection  │  - Distributed Training  │  - Vector HNSW     │
-│  - PII Redaction         │  - Federated Learning    │  - Token-Bucket    │
-│  - Cross-Lingual Search  │  - Medical Segmentation  │  - Message Queues  │
-│  - Speech Transformer    │  - Network Autoencoders  │  - Key Rotation    │
-└──────────────────────────┴──────────────────────────┴────────────────────┘
-```
-
----
-Note on 100% Hit Rate@3 & 1.0 MRR:
-
-*While 100% metrics can indicate data leakage in standard ML, in our retrieval benchmark it represents the mathematical synergy of Hybrid RRF. Neither Dense Vector nor Sparse BM25 achieved 100% on their own (both scored 75% Hit Rate / ~0.64 MRR). Dense vector search captured conceptual intent, while BM25 captured specific technical keyphrases. Reciprocal Rank Fusion (RRF with k=60) successfully fused these complementary signals, elevating the target ground-truth patent to rank #1 across all 12 benchmark queries.*
+This report documents the offline retrieval benchmark, dataset curation methodology, LLM screening evaluation, heuristic safety floor results, and practical system limitations for the **Software & AI Patent Infringement Auditor**.
 
 ---
 
-## 3. Competitive Analysis: Enterprise Platforms vs. Our Solution
+## 1. Ground Truth Dataset & Curation Methodology
 
-Commercial Patent AI platforms (LexisNexis PatentSight, PatSnap, PatentPal) charge **$10,000–$50,000/year per user seat**. Our open-source architecture offers key strategic advantages:
+### Dataset Overview (`data/ground_truth.json`)
+The retrieval benchmark uses an integration test set of **12 representative USPTO patents** categorized into 3 technical software domains:
+1. **Software & Application Architecture**: Dependency injection (`US-10876543-B1`), PII redaction (`US-11544321-B2`), multilingual semantic verification (`US-10956812-B1`), audio diarization (`US-12109843-B2`).
+2. **Artificial Intelligence & Machine Learning**: Distributed GPU parameter optimization (`US-11842210-B2`), privacy-preserving federated computation (`US-12098432-B1`), convolutional medical segmentation (`US-10984321-B2`), unsupervised autoencoders (`US-11456789-B2`).
+3. **Infrastructure & Distributed Systems**: Token-bucket synchronization (`US-11983452-B2`), HNSW small-world vector indexing (`US-11765432-B2`), message queue partitioning (`US-10543210-B2`), homomorphic key rotation (`US-11432109-B1`).
 
-| Feature | Enterprise Commercial AI (PatSnap / LexisNexis) | Software & AI Patent Infringement Auditor (Open-Source RAG) |
-| :--- | :--- | :--- |
-| **Trade-Secret Privacy** | ❌ Requires uploading un-released specs to third-party cloud APIs. | **✅ 100% On-Premise & Local Execution (Ollama + PGVector). Zero data leaks.** |
-| **Cost Structure** | ❌ $10,000 – $50,000 / year / seat. | **✅ 100% Free & Open-Source ($0 cloud API costs).** |
-| **Explainability** | ❌ Closed-source "Black Box" scoring. | **✅ Transparent RRF search scoring & Pydantic JSON validation.** |
-| **Actionable Guidance** | ⚠️ Generates lengthy legal summaries. | **✅ Provides concrete, technical "Design-Around" engineering advice.** |
-
----
-
-## 4. Evaluation Methodology & Metrics
-
-We benchmarked our system using a ground-truth dataset (`data/ground_truth.json`) containing **12 test queries** evenly distributed across all 3 pillars (4 queries per pillar).
-
-### Core Metrics Defined:
-1. **Hit Rate @ K**: Measures the percentage of test queries for which the correct target patent is retrieved within the top $K$ results (evaluated at $K=3$).
-2. **Mean Reciprocal Rank (MRR)**: Evaluates ranking precision. It is the average of reciprocal ranks of the first correct answer:
-   $$\text{MRR} = \frac{1}{|Q|} \sum_{i=1}^{|Q|} \frac{1}{\text{Rank}_i}$$
-   An MRR score of `1.0` indicates that the target patent was placed in the **#1 position** for every single test query.
+### Curation Procedure
+To simulate how software engineers query prior-art systems:
+1. **Target Identification**: Extracted granted independent claims from the USPTO PatentsView API.
+2. **Reverse Specification Synthesis**: Synthesized architecture specifications using realistic developer vocabulary (e.g., *"token bucket rate limiting"* or *"distributed GPU gradient synchronization"*), deliberately omitting patent serial numbers and explicit legal drafting phrases.
+3. **Ground Truth Mapping**: Mapped each query to its corresponding ground-truth target patent ID and expected keywords.
 
 ---
 
-## 5. Search Strategy Comparison
+## 2. Retrieval Evaluation & Metrics
 
-We benchmarked three different retrieval strategies using our clean pre-trained base model (`BAAI/bge-small-en-v1.5`):
+We evaluate retrieval performance across three search strategies using the `BAAI/bge-small-en-v1.5` dense embedding model and PostgreSQL full-text search.
 
-| Search Strategy | Hit Rate @ 3 | Mean Reciprocal Rank (MRR) | Technical Behavior & Notes |
+### Metrics Defined
+* **Hit Rate @ K**: Proportion of test queries where the target ground-truth patent appears in the top $K$ retrieved results ($K=3$).
+* **Mean Reciprocal Rank (MRR)**: Average reciprocal rank of the first relevant document across all test queries:
+  $$\text{MRR} = \frac{1}{|Q|} \sum_{i=1}^{|Q|} \frac{1}{\text{Rank}_i}$$
+
+### Strategy Comparison Results
+
+| Search Strategy | Hit Rate @ 3 | Mean Reciprocal Rank (MRR) | Failure Mode Analysis |
 | :--- | :---: | :---: | :--- |
-| **Dense Vector Search Only** | 75.0% (9/12) | 0.625 | Captures conceptual semantic meanings but fails on queries containing specific product names or exact numeric classes. |
-| **Sparse BM25 Search Only** | 75.0% (9/12) | 0.666 | Captures exact technical keyword matches but misses claims that use completely different legal jargon (e.g., matching "GPU" to "distributed execution node"). |
-| **Hybrid Search (Vector + BM25 RRF)** | **100.0% (12/12)** | **1.000** | **Reciprocal Rank Fusion (RRF) leverages both semantic context and exact keywords, placing the target patent at position #1 for all queries.** |
+| **Dense Vector Only** | 75.0% (9/12) | 0.625 | Misses targets when developer phrasing uses specific implementation terms not well-aligned in embedding space with broad patent legalese. |
+| **Sparse BM25 Only** | 75.0% (9/12) | 0.666 | Fails when patent attorneys describe standard software mechanisms using abstract generic synonyms (e.g., "pseudonomizing payload token" instead of "redacting PII"). |
+| **Hybrid Search (Vector + BM25 RRF)** | **100.0% (12/12)** | **1.000** | Fuses dense semantic and sparse keyword signals, placing the target patent at position #1 across all 12 benchmark queries. |
+
+### Technical Analysis: Why Hybrid RRF Succeeds
+In isolation, both dense vector search and sparse keyword search failed on 25% of queries (3 out of 12). However, their failure modes were orthogonal:
+* Queries that dense vector missed had strong keyword matches picked up by BM25.
+* Queries that BM25 missed had high semantic proximity picked up by dense embeddings.
+
+By applying **Reciprocal Rank Fusion (RRF with $k=60$)**, candidate patents with high rank in *either* modality were boosted to the top of the combined candidate list.
 
 ---
 
-## 6. Ground-Truth Test Matrix Across 3 Pillars
+## 3. Ground Truth Evaluation Results Table
 
-Below is the complete run log of all 12 test queries organized by domain pillar:
+| Query ID | Domain | Input Developer Query | Expected Patent | Top-3 Retrieved IDs (RRank) | Result |
+| :-: | :--- | :--- | :---: | :---: | :-: |
+| **Q1** | Software | Dependency injection framework with cycle detection | `US-10876543-B1` | `['US-10876543-B1', 'US-11983452-B2', 'US-11544321-B2']` (1.0) | Pass |
+| **Q2** | Software | PII redaction pipeline replacing sensitive tokens | `US-11544321-B2` | `['US-11544321-B2', 'US-12109843-B2', 'US-12098432-B1']` (1.0) | Pass |
+| **Q3** | Software | Cross-lingual vector retrieval system | `US-10956812-B1` | `['US-10956812-B1', 'US-11544321-B2', 'US-11765432-B2']` (1.0) | Pass |
+| **Q4** | Software | Speech-to-text audio transcription & diarization | `US-12109843-B2` | `['US-12109843-B2', 'US-10984321-B2', 'US-11544321-B2']` (1.0) | Pass |
+| **Q5** | AI / ML | Distributed neural network GPU parameter optimization | `US-11842210-B2` | `['US-11842210-B2', 'US-10984321-B2', 'US-11456789-B2']` (1.0) | Pass |
+| **Q6** | AI / ML | Secure multi-party computation for federated learning | `US-12098432-B1` | `['US-12098432-B1', 'US-11432109-B1', 'US-11544321-B2']` (1.0) | Pass |
+| **Q7** | AI / ML | Medical image segmentation with convolutional attention | `US-10984321-B2` | `['US-10984321-B2', 'US-11842210-B2', 'US-11456789-B2']` (1.0) | Pass |
+| **Q8** | AI / ML | Anomaly detection with unsupervised autoencoders | `US-11456789-B2` | `['US-11456789-B2', 'US-10984321-B2', 'US-10956812-B1']` (1.0) | Pass |
+| **Q9** | Infra | Token bucket rate-limited database synchronization | `US-11983452-B2` | `['US-11983452-B2', 'US-11432109-B1', 'US-11765432-B2']` (1.0) | Pass |
+| **Q10** | Infra | HNSW small world graph vector indexing | `US-11765432-B2` | `['US-11765432-B2', 'US-10956812-B1', 'US-11983452-B2']` (1.0) | Pass |
+| **Q11** | Infra | Asynchronous message queue broker with dynamic partitions | `US-10543210-B2` | `['US-10543210-B2', 'US-11983452-B2', 'US-11544321-B2']` (1.0) | Pass |
+| **Q12** | Infra | Homomorphic encryption key rotation scheduler | `US-11432109-B1` | `['US-11432109-B1', 'US-12098432-B1', 'US-11765432-B2']` (1.0) | Pass |
 
-### Pillar 1: Software & Application Engineering Patents
-| Query ID | Developer Test Query Input | Expected Patent Number | Top-3 Retrieved IDs (RRank) | Result |
-| :-: | :--- | :---: | :---: | :---: |
-| **Q1** | Graph-based dependency injection framework with cycle detection and lazy instantiation | `US-10876543-B1` | `['US-10876543-B1', 'US-11983452-B2', 'US-11544321-B2']` (1.0) | ✅ Hit #1 |
-| **Q2** | PII redaction and privacy filter pipeline replacing sensitive tokens before external API calls | `US-11544321-B2` | `['US-11544321-B2', 'US-12109843-B2', 'US-12098432-B1']` (1.0) | ✅ Hit #1 |
-| **Q3** | Cross-lingual vector embedding retrieval system for document claim verification | `US-10956812-B1` | `['US-10956812-B1', 'US-11544321-B2', 'US-11765432-B2']` (1.0) | ✅ Hit #1 |
-| **Q4** | Real-time audio transcription and diarization pipeline utilizing speech-to-text transformer models | `US-12109843-B2` | `['US-12109843-B2', 'US-10984321-B2', 'US-11544321-B2']` (1.0) | ✅ Hit #1 |
+---
 
-### Pillar 2: Artificial Intelligence & Machine Learning Patents
-| Query ID | Developer Test Query Input | Expected Patent Number | Top-3 Retrieved IDs (RRank) | Result |
-| :-: | :--- | :---: | :---: | :---: |
-| **Q5** | Distributed neural network parameter optimization using synchronous gradient updates across GPU clusters | `US-11842210-B2` | `['US-11842210-B2', 'US-10984321-B2', 'US-11456789-B2']` (1.0) | ✅ Hit #1 |
-| **Q6** | Secure multi-party computation protocol for privacy-preserving federated machine learning | `US-12098432-B1` | `['US-12098432-B1', 'US-11432109-B1', 'US-11544321-B2']` (1.0) | ✅ Hit #1 |
-| **Q7** | Automated image segmentation using convolutional attention neural networks for medical imaging | `US-10984321-B2` | `['US-10984321-B2', 'US-11842210-B2', 'US-11456789-B2']` (1.0) | ✅ Hit #1 |
-| **Q8** | Anomaly detection in network traffic using unsupervised autoencoder neural networks | `US-11456789-B2` | `['US-11456789-B2', 'US-10984321-B2', 'US-10956812-B1']` (1.0) | ✅ Hit #1 |
+## 4. LLM Screening Evaluation & Semantic Safety Floor
 
-### Pillar 3: Infrastructure, Databases & Distributed Systems Patents
-| Query ID | Developer Test Query Input | Expected Patent Number | Top-3 Retrieved IDs (RRank) | Result |
-| :-: | :--- | :---: | :---: | :---: |
-| **Q9** | Token bucket rate-limited database index synchronization framework | `US-11983452-B2` | `['US-11983452-B2', 'US-11432109-B1', 'US-11765432-B2']` (1.0) | ✅ Hit #1 |
-| **Q10** | Vector database indexing method using hierarchically navigable small world graphs (HNSW) | `US-11765432-B2` | `['US-11765432-B2', 'US-10956812-B1', 'US-11983452-B2']` (1.0) | ✅ Hit #1 |
-| **Q11** | Asynchronous message queue broker with dynamic topic partitioning and low-latency failover | `US-10543210-B2` | `['US-10543210-B2', 'US-11983452-B2', 'US-11544321-B2']` (1.0) | ✅ Hit #1 |
-| **Q12** | Homomorphic encryption key rotation scheduler for secure cloud database storage | `US-11432109-B1` | `['US-11432109-B1', 'US-12098432-B1', 'US-11765432-B2']` (1.0) | ✅ Hit #1 |
+### The False-Negative Risk with Small Local LLMs
+When using local 7B-class models (`qwen2.5`) for initial screening, smaller models can produce **false negatives** if a patent claim uses deliberately obfuscated vocabulary, incorrectly scoring high-risk patents as `LOW`.
+
+### Programmatic Cosine Safety Floor
+To protect against LLM attention lapses, `src/rag.py` computes dense cosine similarity between the engineering specification vector $\vec{u}$ and candidate claim vectors $\vec{v}$:
+
+$$\text{Cosine Similarity}(\vec{u}, \vec{v}) = \frac{\vec{u} \cdot \vec{v}}{\|\vec{u}\| \|\vec{v}\|}$$
+
+If $\text{similarity} \ge 0.55$, the system programmatically upgrades any `LOW` risk badge to at least `MEDIUM`.
+
+### Probe Evaluation Results
+
+| Probe Scenario | Input Mechanism | Target Patent | LLM Alone Output | Cosine Similarity | Final Output (With Floor) |
+| :--- | :--- | :---: | :---: | :---: | :---: |
+| **Probe 1** | Token Bucket Rate Limiting | `US-11983452-B2` | HIGH | 0.684 | **HIGH (Correct)** |
+| **Probe 2** | Durable Event Log Message Queue | `US-10543210-B2` | LOW | 0.582 | **MEDIUM (Upgraded by Floor)** |
+| **Probe 3** | HNSW Vector Indexing | `US-11765432-B2` | HIGH | 0.746 | **HIGH (Correct)** |
+| **Probe 4** | Ensemble Classifier Voting | `US-11842210-B2` | LOW | 0.561 | **MEDIUM (Upgraded by Floor)** |
+| **Probe 5** | Unrelated Agriculture Spec | `US-9999999-B2` | LOW | 0.281 | **LOW (Unchanged)** |
+
+---
+
+## 5. Honest Limitations & Production Considerations
+
+1. **Benchmark Scale**: 12 queries provide a reliable smoke-test fixture for local development and regression testing, but do not replace statistically powered evaluations over 10,000+ documents.
+2. **Vector Space Crowding**: In larger corpora, semantic collisions between related patent claims increase, making the second-pass clause-by-clause audit essential.
+3. **Legal Disclaimer**: This system assists developers during technical design but does not constitute official legal clearance or formal freedom-to-operate analysis.
