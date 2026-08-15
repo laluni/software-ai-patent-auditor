@@ -197,7 +197,7 @@ pip install -r requirements.txt
 # 4. Launch Streamlit UI
 streamlit run app.py
 ```
+---
+
 ### Important Notice
 **This project is a developer tool to help engineers search and explore technical patent ideas. It is NOT legal advice. Always consult a real patent lawyer before making business or legal decisions.**
-
----
