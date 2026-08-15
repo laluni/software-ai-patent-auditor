@@ -10,12 +10,6 @@
 [![Docker](https://img.shields.io/badge/Docker-Multi--Container-2496ED)](https://www.docker.com/)
 
 ---
-
-### ⚠️ Important Notice
-**This project is a developer tool to help engineers search and explore technical patent ideas. It is NOT legal advice. Always consult a real patent lawyer before making business or legal decisions.**
-
----
-
 ## Table of Contents
 1. [Overview & Problem Statement](#overview--problem-statement)
 2. [Architecture & Workflow](#architecture--workflow)
@@ -203,3 +197,7 @@ pip install -r requirements.txt
 # 4. Launch Streamlit UI
 streamlit run app.py
 ```
+### Important Notice
+**This project is a developer tool to help engineers search and explore technical patent ideas. It is NOT legal advice. Always consult a real patent lawyer before making business or legal decisions.**
+
+---
