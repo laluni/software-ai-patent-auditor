@@ -12,14 +12,33 @@
 ---
 ## Table of Contents
 1. [Overview & Problem Statement](#overview--problem-statement)
-2. [Architecture & Workflow](#architecture--workflow)
-3. [Data Ingestion Pipeline (`dlt`)](#data-ingestion-pipeline-dlt)
-4. [Hybrid Retrieval & RRF Formulation](#hybrid-retrieval--rrf-formulation)
-5. [Evaluation Benchmark & Limitations](#evaluation-benchmark--limitations)
-6. [LLM Screening, Heuristic Floor & Trade-Offs](#llm-screening-heuristic-floor--trade-offs)
-7. [Hardware Requirements & Latency Benchmarks](#hardware-requirements--latency-benchmarks)
-8. [Automated Testing](#automated-testing)
-9. [Setup & Reproducibility](#setup--reproducibility)
+2. [Project Alignment with Zoomcamp Requirements](#project-alignment-with-zoomcamp-requirements)
+3. [Architecture & Workflow](#architecture--workflow)
+4. [Data Ingestion Pipeline (`dlt`)](#data-ingestion-pipeline-dlt)
+5. [Hybrid Retrieval & RRF Formulation](#hybrid-retrieval--rrf-formulation)
+6. [Evaluation Benchmark & Limitations](#evaluation-benchmark--limitations)
+7. [LLM Screening, Heuristic Floor & Trade-Offs](#llm-screening-heuristic-floor--trade-offs)
+8. [Hardware Requirements & Latency Benchmarks](#hardware-requirements--latency-benchmarks)
+9. [Automated Testing](#automated-testing)
+10. [Setup & Reproducibility](#setup--reproducibility)
+
+---
+
+## Project Alignment with Zoomcamp Requirements
+
+For peer reviewers evaluating this capstone against the course checklist:
+
+| Evaluation Criterion | Implementation Details & File Location |
+| :--- | :--- |
+| **Problem Description** | Clear software prior-art search problem statement contrasting developer vs. legal vocabulary (`README.md`). |
+| **Knowledge Base & LLM** | PostgreSQL with `pgvector` knowledge base queried via local Ollama `qwen2.5` (`src/db.py`, `src/rag.py`). |
+| **Retrieval Evaluation** | Automated evaluation script comparing Dense Vector, Sparse BM25, and Hybrid RRF (`src/eval.py`, `data/ground_truth.json`). |
+| **RAG / LLM Evaluation** | Evaluated prompt strategies, Doctrine of Equivalents, and the heuristic safety floor across 5 domain probe tests. |
+| **User Interface** | Interactive Streamlit web application (`app.py`) with synchronized risk badges and Pass 2 claim inspection. |
+| **Ingestion Pipeline** | Automated data ingestion pipeline using **`dlt` (data load tool)** with primary key deduplication (`src/dlt_ingest.py`). |
+| **Containerization** | Multi-service Docker Compose orchestrating `postgres` (`pgvector`), `ollama`, and the `web` application (`docker-compose.yml`, `Dockerfile`). |
+| **Reproducibility** | Complete setup instructions for both Docker and local virtualenv, with pinned dependencies (`requirements.txt`). |
+| **Best Practices** | Hybrid search with RRF ($k=60$), document re-ranking, and LLM keyword query rewriting (`src/search.py`, `src/rag.py`). |
 
 ---
 
@@ -119,8 +138,9 @@ When evaluating complex patent claims with local 7B-class models (`qwen2.5`), sm
 ### The Cosine Safety Floor Heuristic (`src/rag.py`)
 To prevent false negatives, we implemented a programmatic safety heuristic:
 1. The LLM performs initial structured screening.
-2. Python computes the cosine similarity between the input specification and the retrieved claim text using `bge-small-en-v1.5`.
-3. If $\text{cosine\_similarity} \ge 0.55$, the risk badge is programmatically upgraded to at least `MEDIUM`.
+2. Python computes the cosine similarity between the input specification vector $\vec{u}$ and the retrieved claim vector $\vec{v}$ using `bge-small-en-v1.5`:
+   $$\text{Cosine Similarity}(\vec{u}, \vec{v}) = \frac{\vec{u} \cdot \vec{v}}{\|\vec{u}\| \|\vec{v}\|}$$
+3. If $\text{similarity} \ge 0.55$, the risk badge is programmatically upgraded to at least `MEDIUM`.
 
 ---
 
