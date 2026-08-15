@@ -168,7 +168,7 @@ def apply_semantic_floor(
     design_doc: str,
     retrieved_claims: list[dict],
     report: PatentAuditReport,
-    sim_threshold: float = 0.50
+    sim_threshold: float = 0.55
 ) -> PatentAuditReport:
     """
     Programmatic Layer 2 Safety Net: Upgrades any LOW risk badge to MEDIUM when
