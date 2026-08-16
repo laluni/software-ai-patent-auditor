@@ -1,6 +1,6 @@
 # Evaluation Benchmark & System Performance Analysis
 
-This report documents the offline retrieval benchmark, dataset curation methodology, LLM screening evaluation, heuristic safety floor results, and practical system limitations for the **Software & AI Patent Infringement Auditor**.
+This report documents the offline retrieval benchmark, dataset curation methodology, LLM screening evaluation, heuristic safety floor results, continuous monitoring telemetry, and practical system limitations for the **Software & AI Patent Infringement Auditor**.
 
 ---
 
@@ -89,7 +89,32 @@ If $\text{similarity} \ge 0.55$, the system programmatically upgrades any `LOW` 
 
 ---
 
-## 5. Honest Limitations & Production Considerations
+## 5. Continuous Production Monitoring Architecture
+
+In production, offline benchmarks are complemented by continuous runtime monitoring across **4 operational pillars** implemented in `src/monitoring.py` and visualised in **Tab 4** of the Streamlit application:
+
+```
+┌────────────────────────────────────────────────────────────────────────────┐
+│                    THE 4 PILLARS OF LLM/RAG MONITORING                    │
+├───────────────────────────────┬────────────────────────────────────────────┤
+│ 1. Retrieval Quality & Drift  │ 2. Generation & Safety Guardrails          │
+│    - Top-1 RRF similarity     │    - Semantic Safety Floor activation rate │
+│    - Data & vocabulary drift  │    - Out-of-domain guardrail rejections    │
+├───────────────────────────────┼────────────────────────────────────────────┤
+│ 3. System Latency & Resources │ 4. User Feedback (Human-in-the-Loop)       │
+│    - DB vs. LLM generation   │    - Thumbs Up/Down satisfaction rating    │
+│    - Pass 1 vs. Pass 2 timing │    - Design-around actionability feedback  │
+└───────────────────────────────┴────────────────────────────────────────────┘
+```
+
+1. **Retrieval Quality**: Continuous tracking of Top-1 RRF similarity scores to detect dataset drift when users query new technical domains.
+2. **Generation & Safety Guardrails**: Real-time measurement of the `0.55` cosine floor activation rate to monitor model classification reliability.
+3. **Operational Latency**: Logging of database retrieval, Pass 1 screening, and Pass 2 deep audit execution times.
+4. **Human Feedback (Human-in-the-Loop)**: User ratings (`👍 Helpful` / `👎 Inaccurate`) captured directly on claim analyses to evaluate translation quality.
+
+---
+
+## 6. Honest Limitations & Production Considerations
 
 1. **Benchmark Scale**: 12 queries provide a reliable smoke-test fixture for local development and regression testing, but do not replace statistically powered evaluations over 10,000+ documents.
 2. **Vector Space Crowding**: In larger corpora, semantic collisions between related patent claims increase, making the second-pass clause-by-clause audit essential.

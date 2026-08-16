@@ -1,23 +1,64 @@
 # System Monitoring & Evaluation Benchmark Report
 
-This document records the offline evaluation metrics, stress-testing benchmark, and continuous monitoring guardrails for the **Software & AI Patent Infringement Auditor**.
+This document records the offline evaluation metrics, 4-pillar continuous monitoring framework, benchmark stress tests, and production observability architecture for the **Software & AI Patent Infringement Auditor**.
 
 ---
 
-## 1. Monitoring & Observability Architecture
+## 1. The 4 Pillars of LLM & RAG Monitoring
 
-The system incorporates operational checks to monitor query latency, match quality, and domain relevance:
+In traditional software, monitoring checks server uptime and HTTP response codes. In an **LLM/RAG pipeline**, queries can return an `HTTP 200 OK` while producing inaccurate classifications or severe latency degradation. 
 
-* **Vector Search Backend**: PostgreSQL `pgvector` Hybrid Dense + Sparse BM25 Search (with an automatic in-memory vector store fallback).
-* **Domain Guardrail Engine**: Reciprocal Rank Fusion (RRF) thresholding (`top_score < 0.018`) to block out-of-domain queries before calling the LLM.
-* **Inference Engine**: Local `qwen2.5` via Ollama.
-* **Programmatic Safety Floor**: Cosine similarity heuristic ($\text{similarity} \ge 0.55$) to prevent false negatives from small local models.
+Our application continuously observes **4 critical operational pillars** via `src/monitoring.py`:
+
+```
+┌────────────────────────────────────────────────────────────────────────────┐
+│                    THE 4 PILLARS OF LLM/RAG MONITORING                    │
+├───────────────────────────────┬────────────────────────────────────────────┤
+│ 1. Retrieval Quality & Drift  │ 2. Generation & Safety Guardrails          │
+│    - Top-1 RRF similarity     │    - Semantic Safety Floor activation rate │
+│    - Data & vocabulary drift  │    - Out-of-domain guardrail rejections    │
+├───────────────────────────────┼────────────────────────────────────────────┤
+│ 3. System Latency & Resources │ 4. User Feedback (Human-in-the-Loop)       │
+│    - DB vs. LLM generation   │    - Thumbs Up/Down satisfaction rating    │
+│    - Pass 1 vs. Pass 2 timing │    - Design-around actionability feedback  │
+└───────────────────────────────┴────────────────────────────────────────────┘
+```
+
+### Pillar 1: Retrieval Quality & Semantic Drift Monitoring
+- **Tracked Metric**: Top-1 Reciprocal Rank Fusion (RRF) Retrieval Score per transaction.
+- **Purpose**: A sudden downward shift in average RRF scores signals that users are entering architectures outside the currently indexed vector space, indicating that new USPTO patent batches must be ingested via the `dlt` pipeline.
+
+### Pillar 2: Generation & Safety Guardrails Monitoring
+- **Tracked Metric**: Cosine Safety Floor Trigger Rate ($\text{similarity} \ge 0.55$) and Out-of-Scope Filter Rate.
+- **Purpose**: Quantifies how often the deterministic embedding floor overrides small 7B model false negatives. A high activation rate signals the need to refine system prompt examples.
+
+### Pillar 3: System Latency & Performance Monitoring
+- **Tracked Metric**: End-to-end execution breakdown (Vector/FTS Database Latency, Pass 1 Screening Latency, Pass 2 Deep Audit Latency).
+- **Purpose**: Ensures query response times remain within acceptable engineering thresholds on local hardware.
+
+### Pillar 4: Human-in-the-Loop User Feedback
+- **Tracked Metric**: Thumbs Up (`👍 Helpful`) vs. Thumbs Down (`👎 Inaccurate`) ratings submitted on claim translation cards.
+- **Purpose**: Provides real-world ground-truth signal from software engineers to guide ongoing prompt engineering.
 
 ---
 
-## 2. Benchmark Stress-Test Evaluation (12 Scenarios)
+## 2. Interactive Monitoring Dashboard (Streamlit Tab 4)
 
-The evaluation suite tests direct developer queries, obfuscated legal texts, domain variations, and out-of-domain queries:
+All telemetry is aggregated in real-time in the Streamlit web interface across **5 distinct visualizations**:
+
+| Dashboard Visualization | Tracked Telemetry | Strategic Engineering Utility |
+| :--- | :--- | :--- |
+| **1. Latency Breakdown** | PostgreSQL search vs. Pass 1 LLM generation | Pinpoints compute bottlenecks between retrieval and model inference. |
+| **2. Risk Verdict Distribution** | Breakdown of `HIGH`, `MEDIUM`, and `LOW` verdicts | Detects systemic bias or conservative skew in risk classifications. |
+| **3. Semantic Drift Trend** | Top-1 RRF score over time | Detects domain drift when new engineering specifications are queried. |
+| **4. Safety Floor Activation** | Frequency of programmatic risk upgrades | Measures the protective impact of the heuristic cosine floor. |
+| **5. User Feedback Rating** | Positive vs. Negative human feedback ratio | Direct feedback loop on patent translation quality and design-around advice. |
+
+---
+
+## 3. Benchmark Stress-Test Evaluation (12 Scenarios)
+
+The evaluation suite validates retrieval performance, domain guardrail triggers, and risk classifications across 12 distinct scenarios:
 
 | Test Category | Scenario Name | Top-1 Patent Retrieved | Retrieval Score | Guardrail Triggered? | LLM Risk Verdict | Status |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
@@ -36,7 +77,7 @@ The evaluation suite tests direct developer queries, obfuscated legal texts, dom
 
 ---
 
-## 3. Implemented Guardrails & Safety Mechanisms
+## 4. Implemented Guardrails & Safety Mechanisms
 
 ### 1. Heuristic Semantic Safety Floor (`src/rag.py`)
 - Prompts the model using the legal Doctrine of Equivalents.
