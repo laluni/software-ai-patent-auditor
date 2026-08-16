@@ -13,9 +13,11 @@ from src.rag import (
 from src.monitoring import (
     log_query_event,
     log_feedback_event,
+    update_pass2_latency,
     get_query_logs_df,
     get_feedback_logs_df,
-    get_monitoring_summary_metrics
+    get_monitoring_summary_metrics,
+    generate_request_id
 )
 
 # Page Configuration
@@ -45,6 +47,8 @@ if "guardrail_warning" not in st.session_state:
     st.session_state.guardrail_warning = None
 if "last_query_event" not in st.session_state:
     st.session_state.last_query_event = None
+if "current_request_id" not in st.session_state:
+    st.session_state.current_request_id = None
 
 # Sidebar: Configuration
 with st.sidebar:
@@ -81,6 +85,9 @@ if st.button("🚀 Run Patent Audit (Pass 1 Screening)", type="primary"):
             start_total = time.time()
             st.session_state.pass2_report = None  # Reset Pass 2 on new search
             st.session_state.guardrail_warning = None
+            # Generate shared request_id for cross-pillar correlation
+            req_id = generate_request_id()
+            st.session_state.current_request_id = req_id
             
             # Step 1: Extract Search Keywords
             keywords = extract_keywords_from_design_doc(design_doc, model_name=model_choice)
@@ -114,7 +121,9 @@ if st.button("🚀 Run Patent Audit (Pass 1 Screening)", type="primary"):
                     pass1_latency_sec=0.0,
                     safety_floor_triggered=False,
                     overall_risk="BLOCKED",
-                    guardrail_status="BLOCKED"
+                    guardrail_status="BLOCKED",
+                    guardrail_type="OUT_OF_SCOPE",
+                    request_id=req_id
                 )
             else:
                 # Step 4: LLM Infringement Audit (Pass 1)
@@ -126,14 +135,15 @@ if st.button("🚀 Run Patent Audit (Pass 1 Screening)", type="primary"):
                 )
                 pass1_latency = time.time() - t_pass1_start
                 st.session_state.audit_report = report
-                
-                # Check if safety floor was triggered
+
+                # Detect guardrail type: safety floor vs clean pass
                 floor_triggered = any(
                     analysis.risk_level in ["MEDIUM", "HIGH"]
                     for analysis in report.analyses
                 )
-                
-                # Log successful query
+                guardrail_type = "SIMILARITY_FLOOR" if floor_triggered else "NONE"
+
+                # Log successful query with shared request_id
                 q_event = log_query_event(
                     query_text=design_doc,
                     top_rrf_score=top_rrf,
@@ -141,9 +151,17 @@ if st.button("🚀 Run Patent Audit (Pass 1 Screening)", type="primary"):
                     pass1_latency_sec=pass1_latency,
                     safety_floor_triggered=floor_triggered,
                     overall_risk=report.overall_risk,
-                    guardrail_status="IN_DOMAIN"
+                    guardrail_status="IN_DOMAIN",
+                    guardrail_type=guardrail_type,
+                    request_id=req_id
                 )
                 st.session_state.last_query_event = q_event
+
+                if q_event.get("ingestion_triggered"):
+                    st.warning(
+                        f"⚠️ **Retrieval Drift Alert**: {q_event['ingestion_reason']}. "
+                        "Consider running `python -m src.dlt_ingest` to refresh the knowledge base."
+                    )
             
             elapsed = round(time.time() - start_total, 2)
             st.success(f"Pass 1 Candidate Screening completed in {elapsed} seconds!")
@@ -187,29 +205,35 @@ with tab1:
                 c1.markdown(f"**Patent ID:** `{analysis.patent_id}`")
                 c1.markdown(f"**Risk Level:** `{analysis.risk_level}`")
                 c1.markdown(f"**Overlapping Concepts:** {', '.join(analysis.overlapping_concepts)}")
-                
+
                 c2.markdown(f"**📖 Plain-English Translation:**\n{analysis.legalese_translation}")
                 c2.markdown(f"**💡 Technical Design-Around Advice:**\n{analysis.suggested_design_around}")
-                
+
                 st.markdown("---")
                 st.markdown("**Rate this Claim Analysis & Advice:**")
                 fb_c1, fb_c2, fb_c3 = st.columns([1, 1, 3])
+                comment_key = f"comment_{analysis.patent_id}_{idx}"
+                user_comment = fb_c3.text_input("Add a note (optional):", key=comment_key, label_visibility="collapsed", placeholder="Describe the issue...")
                 if fb_c1.button(f"👍 Helpful (#{idx})", key=f"up_{analysis.patent_id}_{idx}"):
                     log_feedback_event(
                         patent_id=analysis.patent_id,
                         rating=1,
                         feedback_type="Claim Translation",
-                        user_comment="Helpful translation and advice"
+                        user_comment=user_comment or "Helpful translation and advice",
+                        request_id=st.session_state.current_request_id,
+                        claim_index=idx
                     )
-                    st.toast(f"Thank you! Feedback recorded for {analysis.patent_id}.", icon="✅")
+                    st.toast(f"Thank you! Feedback recorded for {analysis.patent_id} Claim #{idx}.", icon="✅")
                 if fb_c2.button(f"👎 Inaccurate (#{idx})", key=f"down_{analysis.patent_id}_{idx}"):
                     log_feedback_event(
                         patent_id=analysis.patent_id,
                         rating=-1,
                         feedback_type="Claim Translation",
-                        user_comment="Inaccurate or low quality"
+                        user_comment=user_comment or "Inaccurate or low quality",
+                        request_id=st.session_state.current_request_id,
+                        claim_index=idx
                     )
-                    st.toast(f"Feedback noted for {analysis.patent_id}.", icon="⚠️")
+                    st.toast(f"Feedback noted for {analysis.patent_id} Claim #{idx}.", icon="⚠️")
     else:
         st.info("Enter a technical design specification above and click 'Run Patent Audit' to view Pass 1 claim results.")
 
@@ -241,10 +265,9 @@ with tab2:
                     st.session_state.audit_report, pass2_res
                 )
                 
-                # Update query log with Pass 2 latency
-                if st.session_state.last_query_event:
-                    st.session_state.last_query_event["pass2_latency_sec"] = round(pass2_latency, 3)
-                    st.session_state.last_query_event["total_latency_sec"] += round(pass2_latency, 3)
+                # Update Pass 2 latency separately in persistent log (Pillar 3)
+                if st.session_state.current_request_id:
+                    update_pass2_latency(st.session_state.current_request_id, pass2_latency)
                 
                 st.success(f"Pass 2 Deep Audit complete for {selected_patent.get('patent_number')} in {round(pass2_latency, 2)}s! Risk badges synchronized.")
 
@@ -287,12 +310,20 @@ with tab4:
     fb_df = get_feedback_logs_df()
     
     # Top KPI Metrics Cards
-    kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+    kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
     summary = get_monitoring_summary_metrics()
     kpi1.metric("Total Queries Audited", summary["total_queries"])
-    kpi2.metric("Average Total Latency", f"{summary['avg_latency_sec']}s")
+    kpi2.metric("Avg Pass 1 Latency", f"{summary['avg_latency_sec']}s")
     kpi3.metric("Safety Floor Trigger Rate", f"{summary['safety_floor_rate_pct']}%")
-    kpi4.metric("User Approval Rating", f"{summary['positive_feedback_pct']}%")
+    # Fix: show N/A when no feedback exists instead of misleading 100%
+    feedback_display = (
+        f"{summary['positive_feedback_pct']}%"
+        if summary['positive_feedback_pct'] is not None
+        else "N/A"
+    )
+    kpi4.metric("User Approval Rating", feedback_display,
+                help=f"{summary['total_feedback']} rating(s) submitted" if summary['total_feedback'] > 0 else "No ratings submitted yet")
+    kpi5.metric("Drift Re-ingestion Alerts", summary.get("ingestion_triggered_count", 0))
     
     st.divider()
 
