@@ -131,22 +131,21 @@ To prevent false negatives, we implemented a programmatic safety heuristic:
 
 ## 7. System Monitoring & Observability Dashboard
 
-The application includes an automated monitoring and human-feedback telemetry subsystem (`src/monitoring.py`) rendered in **Tab 4: 📊 System Monitoring & Analytics** of the Streamlit interface:
+The application includes an automated monitoring and human-feedback telemetry subsystem (`src/monitoring.py`) rendered in **Tab 4: System Monitoring & Analytics** of the Streamlit interface:
 
-* **Real-Time KPI Metrics**: Displays Total Queries Audited, Average End-to-End Latency, Cosine Safety Floor Trigger Rate, and User Satisfaction Rate.
-* **Interactive Visualizations**:
-  1. **Latency Breakdown**: Compares PostgreSQL hybrid search time vs. Pass 1 LLM generation time per query.
-  2. **Risk Verdict Distribution**: Tracks percentages of audited specifications classified as `HIGH`, `MEDIUM`, or `LOW` risk.
-  3. **Semantic Drift Tracking**: Plots the Top-1 Reciprocal Rank Fusion (RRF) retrieval score trend over time to detect data drift.
-  4. **Safety Heuristic Activation Rate**: Visualizes the percentage of queries where the `0.55` cosine floor upgraded the verdict.
-  5. **Human-in-the-Loop Feedback**: Live satisfaction breakdown from user `👍 Helpful` vs. `👎 Inaccurate` ratings submitted directly on claim cards.
+* **Real-Time KPI Metrics**: Displays Total Queries Audited, Average Pass 1 Latency, Cosine Safety Floor Trigger Rate, User Approval Rating (with N/A handling for zero-feedback states), and Drift Re-ingestion Alerts.
+* **4-Pillar Observability**:
+  1. **Retrieval Quality & Semantic Drift**: Rolling window evaluation of Top-1 RRF scores with automated re-ingestion alerts when in-domain retrieval degrades.
+  2. **Generation & Safety Guardrails**: Real-time logging of the 0.55 cosine safety floor upgrades vs. out-of-scope domain rejections.
+  3. **Latency Breakdown**: Millisecond-accurate execution timing separating PostgreSQL hybrid search, Pass 1 LLM screening, and Pass 2 on-demand deep audit.
+  4. **Human-in-the-Loop Feedback**: Per-claim user ratings (Helpful vs. Needs Improvement) tied to specific patent IDs and correlated via shared `request_id`.
 * **Audit Transaction Log**: Expandable data table providing visibility into every query transaction and timestamp.
 
 ---
 
 ## 8. Automated Testing
 
-The codebase includes automated unit and integration tests covering vector store fallbacks, RRF arithmetic, the programmatic safety floor, and monitoring telemetry:
+The codebase includes automated unit and integration tests covering vector store fallbacks, RRF arithmetic, the programmatic safety floor, monitoring telemetry, and end-to-end UI rendering:
 
 ```bash
 # Run full pytest suite
@@ -157,6 +156,8 @@ Test coverage includes:
 - `tests/test_retrieval.py`: Tests RRF ranking math and vector store in-memory fallback.
 - `tests/test_safety_floor.py`: Tests semantic floor threshold upgrades and ensures unrelated domains remain unaffected.
 - `tests/test_monitoring.py`: Tests query transaction logging, feedback capture, and metric aggregations.
+- `tests/test_monitoring_pillars.py`: Comprehensive edge-case test suite for all 4 monitoring pillars and cross-pillar request_id correlation.
+- `tests/test_e2e_app.py`: End-to-end Streamlit AppTest validating clean initialization and zero-error dashboard rendering.
 
 ---
 

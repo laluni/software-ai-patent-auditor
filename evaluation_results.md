@@ -1,13 +1,13 @@
-# Evaluation Benchmark & System Performance Analysis
+# Evaluation Benchmark and System Performance Analysis
 
-This report documents the offline retrieval benchmark, dataset curation methodology, LLM screening evaluation, heuristic safety floor results, continuous monitoring telemetry, and practical system limitations for the **Software & AI Patent Infringement Auditor**.
+This report documents the offline retrieval benchmark, dataset curation methodology, LLM screening evaluation, heuristic safety floor results, continuous monitoring telemetry, and practical system limitations for the Software & AI Patent Infringement Auditor.
 
 ---
 
-## 1. Ground Truth Dataset & Curation Methodology
+## 1. Ground Truth Dataset and Curation Methodology
 
 ### Dataset Overview (`data/ground_truth.json`)
-The retrieval benchmark uses an integration test set of **12 representative USPTO patents** categorized into 3 technical software domains:
+The retrieval benchmark uses an integration test set of 12 representative USPTO patents categorized into 3 technical software domains:
 1. **Software & Application Architecture**: Dependency injection (`US-10876543-B1`), PII redaction (`US-11544321-B2`), multilingual semantic verification (`US-10956812-B1`), audio diarization (`US-12109843-B2`).
 2. **Artificial Intelligence & Machine Learning**: Distributed GPU parameter optimization (`US-11842210-B2`), privacy-preserving federated computation (`US-12098432-B1`), convolutional medical segmentation (`US-10984321-B2`), unsupervised autoencoders (`US-11456789-B2`).
 3. **Infrastructure & Distributed Systems**: Token-bucket synchronization (`US-11983452-B2`), HNSW small-world vector indexing (`US-11765432-B2`), message queue partitioning (`US-10543210-B2`), homomorphic key rotation (`US-11432109-B1`).
@@ -15,12 +15,12 @@ The retrieval benchmark uses an integration test set of **12 representative USPT
 ### Curation Procedure
 To simulate how software engineers query prior-art systems:
 1. **Target Identification**: Extracted granted independent claims from the USPTO PatentsView API.
-2. **Reverse Specification Synthesis**: Synthesized architecture specifications using realistic developer vocabulary (e.g., *"token bucket rate limiting"* or *"distributed GPU gradient synchronization"*), deliberately omitting patent serial numbers and explicit legal drafting phrases.
+2. **Reverse Specification Synthesis**: Synthesized architecture specifications using realistic developer vocabulary (e.g., "token bucket rate limiting" or "distributed GPU gradient synchronization"), omitting patent serial numbers and explicit legal drafting phrases.
 3. **Ground Truth Mapping**: Mapped each query to its corresponding ground-truth target patent ID and expected keywords.
 
 ---
 
-## 2. Retrieval Evaluation & Metrics
+## 2. Retrieval Evaluation and Metrics
 
 We evaluate retrieval performance across three search strategies using the `BAAI/bge-small-en-v1.5` dense embedding model and PostgreSQL full-text search.
 
@@ -42,7 +42,7 @@ In isolation, both dense vector search and sparse keyword search failed on 25% o
 * Queries that dense vector missed had strong keyword matches picked up by BM25.
 * Queries that BM25 missed had high semantic proximity picked up by dense embeddings.
 
-By applying **Reciprocal Rank Fusion (RRF with $k=60$)**, candidate patents with high rank in *either* modality were boosted to the top of the combined candidate list.
+By applying **Reciprocal Rank Fusion (RRF with $k=60$)**, candidate patents with high rank in either modality were boosted to the top of the combined candidate list.
 
 ---
 
@@ -65,7 +65,7 @@ By applying **Reciprocal Rank Fusion (RRF with $k=60$)**, candidate patents with
 
 ---
 
-## 4. LLM Screening Evaluation & Semantic Safety Floor
+## 4. LLM Screening Evaluation and Semantic Safety Floor
 
 ### The False-Negative Risk with Small Local LLMs
 When using local 7B-class models (`qwen2.5`) for initial screening, smaller models can produce **false negatives** if a patent claim uses deliberately obfuscated vocabulary, incorrectly scoring high-risk patents as `LOW`.
@@ -94,27 +94,29 @@ If $\text{similarity} \ge 0.55$, the system programmatically upgrades any `LOW` 
 In production, offline benchmarks are complemented by continuous runtime monitoring across **4 operational pillars** implemented in `src/monitoring.py` and visualised in **Tab 4** of the Streamlit application:
 
 ```
-┌────────────────────────────────────────────────────────────────────────────┐
-│                    THE 4 PILLARS OF LLM/RAG MONITORING                    │
-├───────────────────────────────┬────────────────────────────────────────────┤
-│ 1. Retrieval Quality & Drift  │ 2. Generation & Safety Guardrails          │
-│    - Top-1 RRF similarity     │    - Semantic Safety Floor activation rate │
-│    - Data & vocabulary drift  │    - Out-of-domain guardrail rejections    │
-├───────────────────────────────┼────────────────────────────────────────────┤
-│ 3. System Latency & Resources │ 4. User Feedback (Human-in-the-Loop)       │
-│    - DB vs. LLM generation   │    - Thumbs Up/Down satisfaction rating    │
-│    - Pass 1 vs. Pass 2 timing │    - Design-around actionability feedback  │
-└───────────────────────────────┴────────────────────────────────────────────┘
++----------------------------------------------------------------------------+
+|                    THE 4 PILLARS OF LLM/RAG MONITORING                    |
++-------------------------------+--------------------------------------------+
+| 1. Retrieval Quality & Drift  | 2. Generation & Safety Guardrails          |
+|    - Top-1 RRF similarity     |    - Semantic Safety Floor activation rate |
+|    - Windowed drift detection |    - Out-of-scope guardrail classification |
+|    - Auto re-ingestion alerts |    - Request-level risk tracking           |
++-------------------------------+--------------------------------------------+
+| 3. System Latency & Resources | 4. User Feedback (Human-in-the-Loop)       |
+|    - PostgreSQL vs. LLM timing|    - Per-claim helpful/inaccurate ratings  |
+|    - Pass 1 vs. Pass 2 timing |    - Shared request_id traceability        |
+|    - Millisecond precision    |    - Qualitative commentary logging        |
++-------------------------------+--------------------------------------------+
 ```
 
-1. **Retrieval Quality**: Continuous tracking of Top-1 RRF similarity scores to detect dataset drift when users query new technical domains.
-2. **Generation & Safety Guardrails**: Real-time measurement of the `0.55` cosine floor activation rate to monitor model classification reliability.
-3. **Operational Latency**: Logging of database retrieval, Pass 1 screening, and Pass 2 deep audit execution times.
-4. **Human Feedback (Human-in-the-Loop)**: User ratings (`👍 Helpful` / `👎 Inaccurate`) captured directly on claim analyses to evaluate translation quality.
+1. **Retrieval Quality and Semantic Drift**: Tracks Top-1 RRF similarity scores across rolling windows to detect vocabulary shift and prompt automatic re-ingestion alerts while ignoring out-of-scope queries.
+2. **Generation and Safety Guardrails**: Tracks the activation rate of the 0.55 cosine safety floor and categorizes events between similarity floor overrides and domain rejections.
+3. **Operational Latency**: Logs exact millisecond timings for database retrieval, Pass 1 LLM screening, and Pass 2 on-demand deep audits independently.
+4. **Human Feedback (Human-in-the-Loop)**: Captures user ratings (+1 for Helpful, -1 for Needs Improvement) attributed to specific patent IDs and claim indices, correlated by a shared `request_id`.
 
 ---
 
-## 6. Honest Limitations & Production Considerations
+## 6. Honest Limitations and Production Considerations
 
 1. **Benchmark Scale**: 12 queries provide a reliable smoke-test fixture for local development and regression testing, but do not replace statistically powered evaluations over 10,000+ documents.
 2. **Vector Space Crowding**: In larger corpora, semantic collisions between related patent claims increase, making the second-pass clause-by-clause audit essential.
