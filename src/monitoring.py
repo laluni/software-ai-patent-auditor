@@ -15,6 +15,21 @@ RRF_DRIFT_THRESHOLD = 0.020       # Single-query floor below which we flag
 RRF_DRIFT_WINDOW = 5              # Consecutive low-RRF queries before ingestion trigger fires
 RRF_INGESTION_COOLDOWN_SECS = 300 # Don't re-trigger more than once per 5 min
 
+__all__ = [
+    "log_query_event",
+    "log_feedback_event",
+    "update_pass2_latency",
+    "get_query_logs_df",
+    "get_feedback_logs_df",
+    "get_monitoring_summary_metrics",
+    "generate_request_id",
+    "check_rrf_drift",
+    "QUERY_LOG_FILE",
+    "FEEDBACK_LOG_FILE",
+    "RRF_DRIFT_THRESHOLD",
+    "RRF_DRIFT_WINDOW",
+]
+
 
 def _ensure_log_files():
     os.makedirs(LOGS_DIR, exist_ok=True)
