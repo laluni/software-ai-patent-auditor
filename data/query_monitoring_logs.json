@@ -26,5 +26,33 @@
     "safety_floor_triggered": true,
     "overall_risk": "HIGH",
     "guardrail_status": "IN_DOMAIN"
+  },
+  {
+    "id": "qry_1786876500107",
+    "timestamp": "2026-08-16T10:35:00.107135",
+    "query_snippet": "We are building a distributed neural network training system that optimizes transformer model weights using synchronous ...",
+    "query_length_chars": 291,
+    "top_rrf_score": 0.0328,
+    "db_latency_sec": 14.865,
+    "pass1_latency_sec": 0.0,
+    "pass2_latency_sec": null,
+    "total_latency_sec": 14.865,
+    "safety_floor_triggered": true,
+    "overall_risk": "MEDIUM",
+    "guardrail_status": "IN_DOMAIN"
+  },
+  {
+    "id": "qry_1786876682416",
+    "timestamp": "2026-08-16T10:38:02.416574",
+    "query_snippet": "Test design doc for distributed training",
+    "query_length_chars": 40,
+    "top_rrf_score": 0.0325,
+    "db_latency_sec": 0.045,
+    "pass1_latency_sec": 3.21,
+    "pass2_latency_sec": 7.5,
+    "total_latency_sec": 10.755,
+    "safety_floor_triggered": true,
+    "overall_risk": "HIGH",
+    "guardrail_status": "IN_DOMAIN"
   }
 ]

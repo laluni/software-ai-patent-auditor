@@ -16,5 +16,32 @@
     "rating_label": "Helpful",
     "feedback_type": "Claim Translation",
     "user_comment": "Accurate translation of rate limiting logic."
+  },
+  {
+    "id": "fb_1786876524458",
+    "timestamp": "2026-08-16T10:35:24.458872",
+    "patent_id": "US-11842210-B2",
+    "rating": 1,
+    "rating_label": "Helpful",
+    "feedback_type": "Claim Translation",
+    "user_comment": "Helpful translation and advice"
+  },
+  {
+    "id": "fb_1786876530048",
+    "timestamp": "2026-08-16T10:35:30.048935",
+    "patent_id": "US-11983452-B2",
+    "rating": 1,
+    "rating_label": "Helpful",
+    "feedback_type": "Claim Translation",
+    "user_comment": "Helpful translation and advice"
+  },
+  {
+    "id": "fb_1786876682419",
+    "timestamp": "2026-08-16T10:38:02.419222",
+    "patent_id": "US-11983452-B2",
+    "rating": 1,
+    "rating_label": "Helpful",
+    "feedback_type": "Claim Translation",
+    "user_comment": "Accurate translation of rate limiting logic."
   }
 ]
