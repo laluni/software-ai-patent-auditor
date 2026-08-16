@@ -383,6 +383,6 @@ with tab4:
 
         st.divider()
         st.markdown("#### 📋 Live Transaction Audit Logs")
-        st.dataframe(q_df.tail(20), use_container_width=True)
+        st.dataframe(q_df.tail(20))
     else:
         st.info("No query logs recorded yet. Execute an audit above to view live system monitoring charts.")
