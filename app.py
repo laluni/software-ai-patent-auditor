@@ -60,8 +60,13 @@ with st.sidebar:
     st.markdown("### 📊 Quick System Health")
     metrics = get_monitoring_summary_metrics()
     st.metric("Total Queries Audited", metrics["total_queries"])
-    st.metric("Avg Total Latency", f"{metrics['avg_latency_sec']}s")
-    st.metric("User Approval Rating", f"{metrics['positive_feedback_pct']}%")
+    st.metric("Avg Pass 1 Latency", f"{metrics['avg_latency_sec']}s")
+    sb_feedback_display = (
+        f"{metrics['positive_feedback_pct']}%"
+        if metrics['positive_feedback_pct'] is not None
+        else "N/A"
+    )
+    st.metric("User Approval Rating", sb_feedback_display)
 
 # Main Interface: Input Section
 st.subheader("1. Enter Technical Design Specification")
@@ -333,13 +338,18 @@ with tab4:
         
         with c_row1_1:
             st.markdown("#### 1. Latency Breakdown (DB Search vs. LLM Pass 1)")
-            latency_chart_data = q_df[["db_latency_sec", "pass1_latency_sec"]].copy()
+            latency_cols = ["db_latency_sec", "pass1_latency_sec"]
+            for col in latency_cols:
+                if col not in q_df.columns:
+                    q_df[col] = 0.0
+            latency_chart_data = q_df[latency_cols].fillna(0.0).copy()
             latency_chart_data.columns = ["DB Search (sec)", "Pass 1 LLM (sec)"]
             st.bar_chart(latency_chart_data)
 
         with c_row1_2:
             st.markdown("#### 2. Risk Verdict Distribution")
-            risk_counts = q_df["overall_risk"].value_counts().reset_index()
+            risk_series = q_df["overall_risk"].fillna("UNKNOWN") if "overall_risk" in q_df.columns else pd.Series(["UNKNOWN"] * len(q_df))
+            risk_counts = risk_series.value_counts().reset_index()
             risk_counts.columns = ["Risk Level", "Count"]
             st.bar_chart(risk_counts.set_index("Risk Level"))
 
@@ -350,11 +360,13 @@ with tab4:
 
         with c_row2_1:
             st.markdown("#### 3. Top-1 Retrieval RRF Score Trend (Semantic Drift)")
-            st.line_chart(q_df["top_rrf_score"].rename("Top-1 RRF Score"))
+            rrf_series = q_df["top_rrf_score"].fillna(0.0) if "top_rrf_score" in q_df.columns else pd.Series([0.0] * len(q_df))
+            st.line_chart(rrf_series.rename("Top-1 RRF Score"))
 
         with c_row2_2:
             st.markdown("#### 4. Cosine Safety Floor Trigger Rate")
-            floor_counts = q_df["safety_floor_triggered"].map({True: "Upgraded by Floor", False: "Standard Assessment"}).value_counts().reset_index()
+            floor_series = q_df["safety_floor_triggered"] if "safety_floor_triggered" in q_df.columns else pd.Series([False] * len(q_df))
+            floor_counts = floor_series.map({True: "Upgraded by Floor", False: "Standard Assessment"}).fillna("Standard Assessment").value_counts().reset_index()
             floor_counts.columns = ["Status", "Count"]
             st.bar_chart(floor_counts.set_index("Status"))
 
