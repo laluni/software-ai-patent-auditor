@@ -18,11 +18,12 @@
 4. [Hybrid Retrieval & RRF Formulation](#4-hybrid-retrieval--rrf-formulation)
 5. [Evaluation Benchmark & Limitations](#5-evaluation-benchmark--limitations)
 6. [LLM Screening, Heuristic Floor & Trade-Offs](#6-llm-screening-heuristic-floor--trade-offs)
-7. [Automated Testing](#7-automated-testing)
-8. [Hardware Requirements & Latency Benchmarks](#8-hardware-requirements--latency-benchmarks)
-9. [Project Alignment with Zoomcamp Requirements](#9-project-alignment-with-zoomcamp-requirements)
-10. [Setup & Reproducibility](#10-setup--reproducibility)
-11. [Important Notice](#11-important-notice)
+7. [System Monitoring & Observability Dashboard](#7-system-monitoring--observability-dashboard)
+8. [Automated Testing](#8-automated-testing)
+9. [Hardware Requirements & Latency Benchmarks](#9-hardware-requirements--latency-benchmarks)
+10. [Project Alignment with Zoomcamp Requirements](#10-project-alignment-with-zoomcamp-requirements)
+11. [Setup & Reproducibility](#11-setup--reproducibility)
+12. [Important Notice](#12-important-notice)
 
 ---
 
@@ -128,22 +129,38 @@ To prevent false negatives, we implemented a programmatic safety heuristic:
 
 ---
 
-## 7. Automated Testing
+## 7. System Monitoring & Observability Dashboard
 
-The codebase includes automated unit and integration tests covering vector store fallbacks, RRF arithmetic, and the programmatic safety floor:
+The application includes an automated monitoring and human-feedback telemetry subsystem (`src/monitoring.py`) rendered in **Tab 4: 📊 System Monitoring & Analytics** of the Streamlit interface:
+
+* **Real-Time KPI Metrics**: Displays Total Queries Audited, Average End-to-End Latency, Cosine Safety Floor Trigger Rate, and User Satisfaction Rate.
+* **Interactive Visualizations**:
+  1. **Latency Breakdown**: Compares PostgreSQL hybrid search time vs. Pass 1 LLM generation time per query.
+  2. **Risk Verdict Distribution**: Tracks percentages of audited specifications classified as `HIGH`, `MEDIUM`, or `LOW` risk.
+  3. **Semantic Drift Tracking**: Plots the Top-1 Reciprocal Rank Fusion (RRF) retrieval score trend over time to detect data drift.
+  4. **Safety Heuristic Activation Rate**: Visualizes the percentage of queries where the `0.55` cosine floor upgraded the verdict.
+  5. **Human-in-the-Loop Feedback**: Live satisfaction breakdown from user `👍 Helpful` vs. `👎 Inaccurate` ratings submitted directly on claim cards.
+* **Audit Transaction Log**: Expandable data table providing visibility into every query transaction and timestamp.
+
+---
+
+## 8. Automated Testing
+
+The codebase includes automated unit and integration tests covering vector store fallbacks, RRF arithmetic, the programmatic safety floor, and monitoring telemetry:
 
 ```bash
-# Run pytest suite
+# Run full pytest suite
 python -m pytest tests/
 ```
 
 Test coverage includes:
 - `tests/test_retrieval.py`: Tests RRF ranking math and vector store in-memory fallback.
 - `tests/test_safety_floor.py`: Tests semantic floor threshold upgrades and ensures unrelated domains remain unaffected.
+- `tests/test_monitoring.py`: Tests query transaction logging, feedback capture, and metric aggregations.
 
 ---
 
-## 8. Hardware Requirements & Latency Benchmarks
+## 9. Hardware Requirements & Latency Benchmarks
 
 Tested on **Intel Core i7 / 16 GB RAM** (Local CPU inference via Ollama):
 
@@ -159,7 +176,7 @@ Tested on **Intel Core i7 / 16 GB RAM** (Local CPU inference via Ollama):
 
 ---
 
-## 9. Project Alignment with Zoomcamp Requirements
+## 10. Project Alignment with Zoomcamp Requirements
 
 For peer reviewers evaluating this capstone against the course checklist:
 
@@ -171,6 +188,7 @@ For peer reviewers evaluating this capstone against the course checklist:
 | **RAG / LLM Evaluation** | Evaluated prompt strategies, Doctrine of Equivalents, and the heuristic safety floor across 5 domain probe tests. |
 | **User Interface** | Interactive Streamlit web application (`app.py`) with synchronized risk badges and Pass 2 claim inspection. |
 | **Ingestion Pipeline** | Automated data ingestion pipeline using **`dlt` (data load tool)** with primary key deduplication (`src/dlt_ingest.py`). |
+| **Monitoring** | Full monitoring subsystem (`src/monitoring.py`) with user feedback collection (thumbs up/down) and a 5-chart Streamlit analytics dashboard. |
 | **Containerization** | Multi-service Docker Compose orchestrating `postgres` (`pgvector`), `ollama`, and the `web` application (`docker-compose.yml`, `Dockerfile`). |
 | **Reproducibility** | Complete setup instructions for both Docker and local virtualenv, with pinned dependencies (`requirements.txt`). |
 | **Best Practices** | Hybrid search with RRF ($k=60$), document re-ranking, and LLM keyword query rewriting (`src/search.py`, `src/rag.py`). |

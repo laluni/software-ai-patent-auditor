@@ -1,0 +1,30 @@
+[
+  {
+    "id": "qry_1786873745143",
+    "timestamp": "2026-08-16T09:49:05.143683",
+    "query_snippet": "Test design doc for distributed training",
+    "query_length_chars": 40,
+    "top_rrf_score": 0.0325,
+    "db_latency_sec": 0.045,
+    "pass1_latency_sec": 3.21,
+    "pass2_latency_sec": 7.5,
+    "total_latency_sec": 10.755,
+    "safety_floor_triggered": true,
+    "overall_risk": "HIGH",
+    "guardrail_status": "IN_DOMAIN"
+  },
+  {
+    "id": "qry_1786873924412",
+    "timestamp": "2026-08-16T09:52:04.412753",
+    "query_snippet": "Test design doc for distributed training",
+    "query_length_chars": 40,
+    "top_rrf_score": 0.0325,
+    "db_latency_sec": 0.045,
+    "pass1_latency_sec": 3.21,
+    "pass2_latency_sec": 7.5,
+    "total_latency_sec": 10.755,
+    "safety_floor_triggered": true,
+    "overall_risk": "HIGH",
+    "guardrail_status": "IN_DOMAIN"
+  }
+]
